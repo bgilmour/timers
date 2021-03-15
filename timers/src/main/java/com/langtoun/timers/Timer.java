@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * Nanosecond timer class supporting reset, start, split, pause, resume, and
+ * stop actions.
+ */
 public class Timer {
 
   private List<List<Long>> splits;
