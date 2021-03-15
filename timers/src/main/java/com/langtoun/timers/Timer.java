@@ -15,7 +15,7 @@ public class Timer {
   private List<List<Long>> splits;
   private List<TimerAction> timerActions;
 
-  private TimerState state = TimerState.UNINITIALISED;
+  private TimerState timerState = TimerState.UNINITIALISED;
 
   private Timer() {
     // create using static method
@@ -27,13 +27,13 @@ public class Timer {
 
   public void start() {
     final long startTime = System.nanoTime();
-    if (state == TimerState.UNINITIALISED) {
+    if (timerState == TimerState.UNINITIALISED) {
       splits = new ArrayList<>();
       timerActions = new ArrayList<>();
       final List<Long> actions = new ArrayList<>();
       actions.add(startTime);
       splits.add(actions);
-      state = TimerState.RUNNING;
+      timerState = TimerState.RUNNING;
       timerActions.add(TimerAction.START);
     } else {
       throw new IllegalStateException("timer can only be started if uninitialised");
@@ -42,7 +42,7 @@ public class Timer {
 
   public void split() {
     final long splitTime = System.nanoTime();
-    if (state == TimerState.RUNNING) {
+    if (timerState == TimerState.RUNNING) {
       final List<Long> actions = new ArrayList<>();
       actions.add(splitTime);
       splits.add(actions);
@@ -54,40 +54,40 @@ public class Timer {
 
   public void pause() {
     final long pauseTime = System.nanoTime();
-    if (state == TimerState.RUNNING) {
+    if (timerState == TimerState.RUNNING) {
       final List<Long> actions = splits.get(splits.size() - 1);
       actions.add(pauseTime);
-      state = TimerState.PAUSED;
+      timerState = TimerState.PAUSED;
       timerActions.add(TimerAction.PAUSE);
-    } else if (state != TimerState.PAUSED) {
+    } else if (timerState != TimerState.PAUSED) {
       throw new IllegalStateException("timer can only be paused if it is running or paused");
     }
   }
 
   public void resume() {
     final long resumeTime = System.nanoTime();
-    if (state == TimerState.PAUSED) {
+    if (timerState == TimerState.PAUSED) {
       final List<Long> actions = splits.get(splits.size() - 1);
       actions.add(resumeTime);
-      state = TimerState.RUNNING;
+      timerState = TimerState.RUNNING;
       timerActions.add(TimerAction.RESUME);
-    } else if (state != TimerState.RUNNING) {
+    } else if (timerState != TimerState.RUNNING) {
       throw new IllegalStateException("timer can only be resumed if it is running or paused");
     }
   }
 
   public void stop() {
     final long stopTime = System.nanoTime();
-    if (state == TimerState.PAUSED) {
+    if (timerState == TimerState.PAUSED) {
       final List<Long> previousActions = splits.get(splits.size() - 1);
       previousActions.add(stopTime);
       timerActions.add(TimerAction.RESUME);
     }
-    if (state == TimerState.PAUSED || state == TimerState.RUNNING) {
+    if (timerState == TimerState.PAUSED || timerState == TimerState.RUNNING) {
       final List<Long> actions = new ArrayList<>();
       actions.add(stopTime);
       splits.add(actions);
-      state = TimerState.STOPPED;
+      timerState = TimerState.STOPPED;
       timerActions.add(TimerAction.STOP);
     } else {
       throw new IllegalStateException("timer has not been started");
@@ -95,7 +95,7 @@ public class Timer {
   }
 
   public void reset() {
-    state = TimerState.UNINITIALISED;
+    timerState = TimerState.UNINITIALISED;
   }
 
   public long calcAllPauses() {
@@ -115,7 +115,7 @@ public class Timer {
   }
 
   public long elapsedTime() {
-    if (state == TimerState.STOPPED) {
+    if (timerState == TimerState.STOPPED) {
       return splits.get(splits.size() - 1).get(0) - splits.get(0).get(0) - calcAllPauses();
     } else {
       throw new IllegalStateException("timer is not stopped");
@@ -123,7 +123,7 @@ public class Timer {
   }
 
   public long elapsedTime(final TimeUnit timeUnit) {
-    if (state == TimerState.STOPPED) {
+    if (timerState == TimerState.STOPPED) {
       return timeUnit.convert(elapsedTime(), TimeUnit.NANOSECONDS);
     } else {
       throw new IllegalStateException("timer is not stopped");
@@ -131,7 +131,7 @@ public class Timer {
   }
 
   public long[] splitTimes() {
-    if (state == TimerState.STOPPED) {
+    if (timerState == TimerState.STOPPED) {
       final long[] times = new long[splits.size() - 1];
       final long startTime = splits.get(0).get(0);
       long totalPauses = 0;
@@ -146,7 +146,7 @@ public class Timer {
   }
 
   public long[] splitTimes(final TimeUnit timeUnit) {
-    if (state == TimerState.STOPPED) {
+    if (timerState == TimerState.STOPPED) {
       final long[] convertedTimes = new long[splits.size() - 1];
       int i = 0;
       for (long time : splitTimes()) {
@@ -159,7 +159,7 @@ public class Timer {
   }
 
   public long[] splitPeriods() {
-    if (state == TimerState.STOPPED) {
+    if (timerState == TimerState.STOPPED) {
       final long[] periods = new long[splits.size() - 1];
       for (int i = 1; i < splits.size(); i++) {
         periods[i - 1] = splits.get(i).get(0) - splits.get(i - 1).get(0) - calcPauses(splits.get(i - 1));
@@ -171,7 +171,7 @@ public class Timer {
   }
 
   public long[] splitPeriods(final TimeUnit timeUnit) {
-    if (state == TimerState.STOPPED) {
+    if (timerState == TimerState.STOPPED) {
       final long[] convertedPeriods = new long[splits.size() - 1];
       int i = 0;
       for (long period : splitPeriods()) {
@@ -185,8 +185,8 @@ public class Timer {
 
   @Override
   public String toString() {
-    if (state != TimerState.STOPPED) {
-      return "timer " + state.name().toLowerCase();
+    if (timerState != TimerState.STOPPED) {
+      return "timer " + timerState.name().toLowerCase();
     } else {
       final Iterator<TimerAction> iter = timerActions.iterator();
       return "{\n" + "  elapsed: " + elapsedTime() + ",\n" + "  splits: " + splits.stream().map(actions -> {
