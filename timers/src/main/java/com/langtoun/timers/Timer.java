@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 public class Timer {
 
   private List<List<Long>> splits;
-  private List<String> timerActions;
+  private List<TimerAction> timerActions;
 
   private TimerState state = TimerState.UNINITIALISED;
 
@@ -30,7 +30,7 @@ public class Timer {
       actions.add(startTime);
       splits.add(actions);
       state = TimerState.RUNNING;
-      timerActions.add("start");
+      timerActions.add(TimerAction.START);
     } else {
       throw new IllegalStateException("timer can only be started if uninitialised");
     }
@@ -42,7 +42,7 @@ public class Timer {
       final List<Long> actions = new ArrayList<>();
       actions.add(splitTime);
       splits.add(actions);
-      timerActions.add("split");
+      timerActions.add(TimerAction.SPLIT);
     } else {
       throw new IllegalStateException("timer can only be split if running");
     }
@@ -54,7 +54,7 @@ public class Timer {
       final List<Long> actions = splits.get(splits.size() - 1);
       actions.add(pauseTime);
       state = TimerState.PAUSED;
-      timerActions.add("pause");
+      timerActions.add(TimerAction.PAUSE);
     } else if (state != TimerState.PAUSED) {
       throw new IllegalStateException("timer can only be paused if it is running or paused");
     }
@@ -66,7 +66,7 @@ public class Timer {
       final List<Long> actions = splits.get(splits.size() - 1);
       actions.add(resumeTime);
       state = TimerState.RUNNING;
-      timerActions.add("resume");
+      timerActions.add(TimerAction.RESUME);
     } else if (state != TimerState.RUNNING) {
       throw new IllegalStateException("timer can only be resumed if it is running or paused");
     }
@@ -77,14 +77,14 @@ public class Timer {
     if (state == TimerState.PAUSED) {
       final List<Long> previousActions = splits.get(splits.size() - 1);
       previousActions.add(stopTime);
-      timerActions.add("resume");
+      timerActions.add(TimerAction.RESUME);
     }
     if (state == TimerState.PAUSED || state == TimerState.RUNNING) {
       final List<Long> actions = new ArrayList<>();
       actions.add(stopTime);
       splits.add(actions);
       state = TimerState.STOPPED;
-      timerActions.add("stop");
+      timerActions.add(TimerAction.STOP);
     } else {
       throw new IllegalStateException("timer has not been started");
     }
@@ -179,22 +179,15 @@ public class Timer {
     }
   }
 
-  private enum TimerState {
-    UNINITIALISED,
-    RUNNING,
-    PAUSED,
-    STOPPED
-  }
-
   @Override
   public String toString() {
     if (state != TimerState.STOPPED) {
       return "timer " + state.name().toLowerCase();
     } else {
-      final Iterator<String> iter = timerActions.iterator();
+      final Iterator<TimerAction> iter = timerActions.iterator();
       return "{\n" + "  elapsed: " + elapsedTime() + ",\n" + "  splits: " + splits.stream().map(actions -> {
         final StringBuilder s = new StringBuilder();
-        final String actionsStr = actions.stream().map(t -> iter.next() + "(" + t + ")").collect(Collectors.joining(",", "[", "]"));
+        final String actionsStr = actions.stream().map(t -> iter.next().action() + "(" + t + ")").collect(Collectors.joining(",", "[", "]"));
         final long pauses = calcPauses(actions);
         s.append("    {").append("\n");
         s.append("      actions: ").append(actionsStr).append(",\n");
