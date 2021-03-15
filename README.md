@@ -1,5 +1,5 @@
 # Timers
-A utility class that provides a simple timer based on nanoseconds timestamps provided by
+A utility class that provides a simple timer based on nanosecond timestamps provided by
 calls to `System.nanoTime()`. The timer provides the following actions:
 - reset
 - start
