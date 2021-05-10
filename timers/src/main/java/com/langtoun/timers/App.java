@@ -1,7 +1,5 @@
 package com.langtoun.timers;
 
-import static com.langtoun.timers.Timer.newTimer;
-
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -11,35 +9,33 @@ import java.util.function.Consumer;
  */
 public class App {
   public static void main(String[] args) {
-    System.out.println("Timers\n------");
+    System.out.println("Timers\n------\n");
 
-    final Timer timer = newTimer();
-
-    runTimerScenario(timer, "scenario 1: start - stop", t -> {
+    runTimerScenario(Timers.createTimer("scenario 1: start - stop"), t -> {
       runAfterDelay(t, 0, Timer::start);
       runAfterDelay(t, 50, Timer::stop);
     });
 
-    runTimerScenario(timer, "scenario 2: start - split - stop", t -> {
+    runTimerScenario(Timers.createTimer("scenario 2: start - split - stop"), t -> {
       runAfterDelay(t, 0, Timer::start);
       runAfterDelay(t, 50, Timer::split);
       runAfterDelay(t, 50, Timer::stop);
     });
 
-    runTimerScenario(timer, "scenario 3: start - pause - resume - stop", t -> {
+    runTimerScenario(Timers.createTimer("scenario 3: start - pause - resume - stop"), t -> {
       runAfterDelay(t, 0, Timer::start);
       runAfterDelay(t, 50, Timer::pause);
       runAfterDelay(t, 50, Timer::resume);
       runAfterDelay(t, 50, Timer::stop);
     });
 
-    runTimerScenario(timer, "scenario 4: start - pause - stop", t -> {
+    runTimerScenario(Timers.createTimer("scenario 4: start - pause - stop"), t -> {
       runAfterDelay(t, 0, Timer::start);
       runAfterDelay(t, 50, Timer::pause);
       runAfterDelay(t, 50, Timer::stop);
     });
 
-    runTimerScenario(timer, "scenario 5: start - split - pause - resume - stop", t -> {
+    runTimerScenario(Timers.createTimer("scenario 5: start - split - pause - resume - stop"), t -> {
       runAfterDelay(t, 0, Timer::start);
       runAfterDelay(t, 50, Timer::split);
       runAfterDelay(t, 50, Timer::pause);
@@ -47,14 +43,14 @@ public class App {
       runAfterDelay(t, 50, Timer::stop);
     });
 
-    runTimerScenario(timer, "scenario 6: start - split - pause - stop", t -> {
+    runTimerScenario(Timers.createTimer("scenario 6: start - split - pause - stop"), t -> {
       runAfterDelay(t, 0, Timer::start);
       runAfterDelay(t, 50, Timer::split);
       runAfterDelay(t, 50, Timer::pause);
       runAfterDelay(t, 50, Timer::stop);
     });
 
-    runTimerScenario(timer, "scenario 7: start - split - pause - resume - pause - resume - split - pause - resume - stop", t -> {
+    runTimerScenario(Timers.createTimer("scenario 7: start - split - pause - resume - pause - resume - split - pause - resume - stop"), t -> {
       runAfterDelay(t, 0, Timer::start);
       runAfterDelay(t, 50, Timer::split);
       runAfterDelay(t, 50, Timer::pause);
@@ -77,10 +73,7 @@ public class App {
     action.accept(timer);
   }
 
-  private static void runTimerScenario(final Timer timer, final String title, final Consumer<Timer> scenario) {
-    System.out.println(title);
-    System.out.println();
-
+  private static void runTimerScenario(final Timer timer, final Consumer<Timer> scenario) {
     timer.reset();
     scenario.accept(timer);
 
@@ -95,7 +88,7 @@ public class App {
     for (long splitPeriod : timer.splitPeriods(TimeUnit.MICROSECONDS)) {
       System.out.printf("period[%d] : %dus\n", i++, splitPeriod);
     }
-    System.out.println();
+    System.out.println("\n");
   }
 
 }

@@ -12,7 +12,7 @@ public final class Timers {
   }
 
   public static Timer createTimer(final String name) {
-    final Timer timer = Timer.newTimer();
+    final Timer timer = Timer.newTimer(name);
     timers.get().put(name, timer);
     return timer;
   }
