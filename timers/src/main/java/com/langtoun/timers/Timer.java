@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
  * resume, and stop actions with results presented in an optional specified
  * {@link TimeUnit}.
  */
+@SuppressWarnings("nls")
 public final class Timer {
 
   private static final String TIMER_START_EXCEPTION = "timer can only be started if uninitialised";
@@ -19,15 +20,15 @@ public final class Timer {
   private static final String TIMER_STOP_EXCEPTION = "timer is not stopped";
   private static final String TIMER_ELAPSED_TIME_EXCEPTION = "elapsed time is only available after the timer is stopped";
   private static final String TIMER_SPLIT_TIMES_EXCEPTION = "split times are only available after the timer is stopped";
+  private static final String TIMER_SPLIT_PERIODS_EXCEPTION = "split periods are only available after the timer is stopped";
 
   private final String name;
 
   private List<List<SplitAction>> splits;
 
+  private Long elapsedTime;
   private long[] splitTimes;
-  private long[] convertedTimes;
   private long[] splitPeriods;
-  private long[] convertedPeriods;
 
   private TimerState timerState = TimerState.UNINITIALISED;
 
@@ -154,10 +155,9 @@ public final class Timer {
    */
   public void reset() {
     timerState = TimerState.UNINITIALISED;
+    elapsedTime = null;
     splitTimes = null;
-    convertedTimes = null;
     splitPeriods = null;
-    convertedPeriods = null;
   }
 
   /**
@@ -169,7 +169,10 @@ public final class Timer {
    */
   public long elapsedTime() {
     if (timerState == TimerState.STOPPED) {
-      return splits.get(splits.size() - 1).get(0).timestamp - splits.get(0).get(0).timestamp - calcAllPauses();
+      if (elapsedTime == null) {
+        elapsedTime = splits.get(splits.size() - 1).get(0).timestamp - splits.get(0).get(0).timestamp - calcAllPauses();
+      }
+      return elapsedTime;
     } else {
       throw new IllegalStateException(TIMER_ELAPSED_TIME_EXCEPTION);
     }
@@ -194,7 +197,7 @@ public final class Timer {
 
   /**
    * Return the split times recorded for this timer. The split times represent the
-   * elapsed time between the {@link TimerAction.START} action and each successive
+   * elapsed time from the {@link TimerAction.START} action to each optional
    * {@link TimerAction.SPLIT} action, ending with the {@link TimerAction.STOP}
    * action. Each split time is presented with the calculated pauses removed.
    *
@@ -219,7 +222,7 @@ public final class Timer {
 
   /**
    * Return the split times recorded for this timer. The split times represent the
-   * elapsed time between the {@link TimerAction.START} action and each successive
+   * elapsed time from the {@link TimerAction.START} action to each optional
    * {@link TimerAction.SPLIT} action, ending with the {@link TimerAction.STOP}
    * action. Each split time is presented with the calculated pauses removed.
    *
@@ -228,24 +231,46 @@ public final class Timer {
    */
   public long[] splitTimes(final TimeUnit timeUnit) {
     if (timerState == TimerState.STOPPED) {
-      if (convertedTimes == null) {
-        convertedTimes = new long[splits.size() - 1];
-        int i = 0;
-        for (long time : splitTimes()) {
-          convertedTimes[i++] = timeUnit.convert(time, TimeUnit.NANOSECONDS);
-        }
+      final long[] convertedTimes = new long[splits.size() - 1];
+      int i = 0;
+      for (long time : splitTimes()) {
+        convertedTimes[i++] = timeUnit.convert(time, TimeUnit.NANOSECONDS);
       }
       return convertedTimes;
     } else {
-      throw new IllegalStateException("split times are only available after timer is stopped");
+      throw new IllegalStateException(TIMER_SPLIT_TIMES_EXCEPTION);
+    }
+  }
+
+  /**
+   * Return a split time specified by index that was recorded for this timer. The
+   * split times represent the elapsed time from the {@link TimerAction.START}
+   * action to each optional {@link TimerAction.SPLIT} action, ending with the
+   * {@link TimerAction.STOP} action. Each split time is presented with the
+   * calculated pauses removed.
+   *
+   * @param index    the index of the requested split time
+   * @param timeUnit the {@link TimeUnit} to be used for the result
+   * @return the indexed split time expressed in the specified {@link TimeUnit}
+   */
+  public long splitTime(final int index, final TimeUnit timeUnit) {
+    if (timerState == TimerState.STOPPED) {
+      if (index < 0 || index >= splits.size() - 1) {
+        throw new IllegalArgumentException(String.format("split time index %d out of range: 0 < index <= %d", index, splits.size() - 1));
+      }
+      return timeUnit.convert(splitTimes()[index], TimeUnit.NANOSECONDS);
+    } else {
+      throw new IllegalStateException(TIMER_SPLIT_TIMES_EXCEPTION);
     }
   }
 
   /**
    * Return the split periods recorded for this timer. The split periods are the
-   * elapsed times between the {@link TimerAction.START} action and successive
-   * {@link TimerAction.SPLIT} actions, ending with the {@link TimerAction.STOP}
-   * action. Each split period is presented with the calculated pauses removed.
+   * elapsed times between the {@link TimerAction} events starting with the
+   * {@link TimerAction.START} action, followed by optional
+   * {@link TimerAction.SPLIT} actions, and ending with the
+   * {@link TimerAction.STOP} action. Each split period is presented with the
+   * calculated pauses removed.
    *
    * @return an array of split periods expressed in {@link TimeUnit.NANOSECONDS}.
    */
@@ -259,15 +284,17 @@ public final class Timer {
       }
       return splitPeriods;
     } else {
-      throw new IllegalStateException(TIMER_SPLIT_TIMES_EXCEPTION);
+      throw new IllegalStateException(TIMER_SPLIT_PERIODS_EXCEPTION);
     }
   }
 
   /**
    * Return the split periods recorded for this timer. The split periods are the
-   * elapsed times between the {@link TimerAction.START} action and successive
-   * {@link TimerAction.SPLIT} actions, ending with the {@link TimerAction.STOP}
-   * action. Each split period is presented with the calculated pauses removed.
+   * elapsed times between the {@link TimerAction} events starting with the
+   * {@link TimerAction.START} action, followed by optional
+   * {@link TimerAction.SPLIT} actions, and ending with the
+   * {@link TimerAction.STOP} action. Each split period is presented with the
+   * calculated pauses removed.
    *
    * @param timeUnit the {@link TimeUnit} to be used for the result
    * @return an array of split periods expressed in the specified
@@ -275,16 +302,37 @@ public final class Timer {
    */
   public long[] splitPeriods(final TimeUnit timeUnit) {
     if (timerState == TimerState.STOPPED) {
-      if (convertedPeriods == null) {
-        convertedPeriods = new long[splits.size() - 1];
-        int i = 0;
-        for (long period : splitPeriods()) {
-          convertedPeriods[i++] = timeUnit.convert(period, TimeUnit.NANOSECONDS);
-        }
+      final long[] convertedPeriods = new long[splits.size() - 1];
+      int i = 0;
+      for (long period : splitPeriods()) {
+        convertedPeriods[i++] = timeUnit.convert(period, TimeUnit.NANOSECONDS);
       }
       return convertedPeriods;
     } else {
-      throw new IllegalStateException("split periods are only available after timer is stopped");
+      throw new IllegalStateException(TIMER_SPLIT_PERIODS_EXCEPTION);
+    }
+  }
+
+  /**
+   * Return the split period specified by index that was recorded for this timer.
+   * The split periods are the elapsed times between the {@link TimerAction}
+   * events starting with the {@link TimerAction.START} action, followed by
+   * optional {@link TimerAction.SPLIT} actions, and ending with the
+   * {@link TimerAction.STOP} action. Each split period is presented with the
+   * calculated pauses removed.
+   *
+   * @param index    the index of the requested split period
+   * @param timeUnit the {@link TimeUnit} to be used for the result
+   * @return the indexed split period expressed in the specified {@link TimeUnit}.
+   */
+  public long splitPeriod(final int index, final TimeUnit timeUnit) {
+    if (timerState == TimerState.STOPPED) {
+      if (index < 0 || index >= splits.size() - 1) {
+        throw new IllegalArgumentException(String.format("split period index %d out of range: 0 < index <= %d", index, splits.size() - 1));
+      }
+      return timeUnit.convert(splitPeriods()[index], TimeUnit.NANOSECONDS);
+    } else {
+      throw new IllegalStateException(TIMER_SPLIT_PERIODS_EXCEPTION);
     }
   }
 
