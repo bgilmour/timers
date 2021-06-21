@@ -8,7 +8,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Unit test for simple App.
+ * Unit test for NanoTimer App.
  */
 public class AppTest extends TestCase {
   /**
@@ -34,9 +34,9 @@ public class AppTest extends TestCase {
     final NanoTimer timer = NanoTimers.createTimer("scenario 1: start - stop");
     runTimerScenario(timer, t -> {
       runAfterDelay(t, 0, NanoTimer::start);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::stop);
-      assertEquals(NanoTimerState.STOPPED, timer.getTimerState());
+      assertEquals(NanoTimerState.STOPPED, t.getTimerState());
     });
   }
 
@@ -44,14 +44,14 @@ public class AppTest extends TestCase {
    * Scenario 2
    */
   public void testScenario2() {
-    final NanoTimer timer = NanoTimers.createTimer("scenario 2: start - split - stop");
+    final NanoTimer timer = NanoTimers.createTimer("scenario 2: start - split(split1) - stop");
     runTimerScenario(timer, t -> {
       runAfterDelay(t, 0, NanoTimer::start);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
-      runAfterDelay(t, 50, NanoTimer::split);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
+      runAfterDelay(t, 50, t1 -> t1.split("split1"));
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::stop);
-      assertEquals(NanoTimerState.STOPPED, timer.getTimerState());
+      assertEquals(NanoTimerState.STOPPED, t.getTimerState());
     });
   }
 
@@ -62,13 +62,13 @@ public class AppTest extends TestCase {
     final NanoTimer timer = NanoTimers.createTimer("scenario 3: start - pause - resume - stop");
     runTimerScenario(timer, t -> {
       runAfterDelay(t, 0, NanoTimer::start);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::pause);
-      assertEquals(NanoTimerState.PAUSED, timer.getTimerState());
+      assertEquals(NanoTimerState.PAUSED, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::resume);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::stop);
-      assertEquals(NanoTimerState.STOPPED, timer.getTimerState());
+      assertEquals(NanoTimerState.STOPPED, t.getTimerState());
     });
   }
 
@@ -79,11 +79,11 @@ public class AppTest extends TestCase {
     final NanoTimer timer = NanoTimers.createTimer("scenario 4: start - pause - stop");
     runTimerScenario(timer, t -> {
       runAfterDelay(t, 0, NanoTimer::start);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::pause);
-      assertEquals(NanoTimerState.PAUSED, timer.getTimerState());
+      assertEquals(NanoTimerState.PAUSED, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::stop);
-      assertEquals(NanoTimerState.STOPPED, timer.getTimerState());
+      assertEquals(NanoTimerState.STOPPED, t.getTimerState());
     });
   }
 
@@ -91,18 +91,18 @@ public class AppTest extends TestCase {
    * Scenario 5
    */
   public void testScenario5() {
-    final NanoTimer timer = NanoTimers.createTimer("scenario 5: start - split - pause - resume - stop");
+    final NanoTimer timer = NanoTimers.createTimer("scenario 5: start - split(split1) - pause - resume - stop");
     runTimerScenario(timer, t -> {
       runAfterDelay(t, 0, NanoTimer::start);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
-      runAfterDelay(t, 50, NanoTimer::split);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
+      runAfterDelay(t, 50, t1 -> t1.split("split1"));
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::pause);
-      assertEquals(NanoTimerState.PAUSED, timer.getTimerState());
+      assertEquals(NanoTimerState.PAUSED, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::resume);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::stop);
-      assertEquals(NanoTimerState.STOPPED, timer.getTimerState());
+      assertEquals(NanoTimerState.STOPPED, t.getTimerState());
     });
   }
 
@@ -110,16 +110,16 @@ public class AppTest extends TestCase {
    * Scenario 6
    */
   public void testScenario6() {
-    final NanoTimer timer = NanoTimers.createTimer("scenario 6: start - split - pause - stop");
+    final NanoTimer timer = NanoTimers.createTimer("scenario 6: start - split(split1) - pause - stop");
     runTimerScenario(timer, t -> {
       runAfterDelay(t, 0, NanoTimer::start);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
-      runAfterDelay(t, 50, NanoTimer::split);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
+      runAfterDelay(t, 50, t1 -> t1.split("split1"));
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::pause);
-      assertEquals(NanoTimerState.PAUSED, timer.getTimerState());
+      assertEquals(NanoTimerState.PAUSED, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::stop);
-      assertEquals(NanoTimerState.STOPPED, timer.getTimerState());
+      assertEquals(NanoTimerState.STOPPED, t.getTimerState());
     });
   }
 
@@ -127,37 +127,35 @@ public class AppTest extends TestCase {
    * Scenario 7
    */
   public void testScenario7() {
-    final NanoTimer timer = NanoTimers.createTimer("scenario 7: start - split - pause - resume - pause - resume - split - pause - resume - stop");
+    final NanoTimer timer = NanoTimers.createTimer("scenario 7: start - split(split1) - pause - resume - pause - resume - split(split2) - pause - resume - stop");
     runTimerScenario(timer, t -> {
       runAfterDelay(t, 0, NanoTimer::start);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
-      runAfterDelay(t, 50, NanoTimer::split);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
+      runAfterDelay(t, 50, t1 -> t1.split("split1"));
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::pause);
-      assertEquals(NanoTimerState.PAUSED, timer.getTimerState());
+      assertEquals(NanoTimerState.PAUSED, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::resume);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::pause);
-      assertEquals(NanoTimerState.PAUSED, timer.getTimerState());
+      assertEquals(NanoTimerState.PAUSED, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::resume);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
-      runAfterDelay(t, 50, NanoTimer::split);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
+      runAfterDelay(t, 50, t1 -> t1.split("split2"));
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::pause);
-      assertEquals(NanoTimerState.PAUSED, timer.getTimerState());
+      assertEquals(NanoTimerState.PAUSED, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::resume);
-      assertEquals(NanoTimerState.RUNNING, timer.getTimerState());
+      assertEquals(NanoTimerState.RUNNING, t.getTimerState());
       runAfterDelay(t, 50, NanoTimer::stop);
-      assertEquals(NanoTimerState.STOPPED, timer.getTimerState());
+      assertEquals(NanoTimerState.STOPPED, t.getTimerState());
     });
   }
 
   private static void runAfterDelay(final NanoTimer timer, final long millis, final Consumer<NanoTimer> action) {
-    if (millis > 0) {
-      try {
-        Thread.sleep(millis);
-      } catch (InterruptedException e) {}
-    }
+    try {
+      TimeUnit.MILLISECONDS.sleep(millis);
+    } catch (InterruptedException e) {}
     action.accept(timer);
   }
 

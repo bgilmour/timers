@@ -1,6 +1,7 @@
 package com.langtoun.timers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -28,9 +29,9 @@ public final class NanoTimer {
 
   private List<TimerSplit> splits;
 
-  private Long elapsedTime;
-  private long[] splitTimes;
-  private long[] splitPeriods;
+  private Long theElapsedTime;
+  private long[] theSplitTimes;
+  private long[] theSplitPeriods;
 
   private NanoTimerState timerState = NanoTimerState.UNINITIALISED;
 
@@ -197,12 +198,15 @@ public final class NanoTimer {
 
   /**
    * Reset this timer to the {@link NanoTimerState.UNINITIALISED} state.
+   *
+   * @return a reference to this timer
    */
-  public void reset() {
+  public NanoTimer reset() {
     timerState = NanoTimerState.UNINITIALISED;
-    elapsedTime = null;
-    splitTimes = null;
-    splitPeriods = null;
+    theElapsedTime = null;
+    theSplitTimes = null;
+    theSplitPeriods = null;
+    return this;
   }
 
   /**
@@ -214,10 +218,10 @@ public final class NanoTimer {
    */
   public long elapsedTime() {
     if (timerState == NanoTimerState.STOPPED) {
-      if (elapsedTime == null) {
-        elapsedTime = splits.get(splits.size() - 1).actions.get(0).timestamp - splits.get(0).actions.get(0).timestamp - calcAllPauses();
+      if (theElapsedTime == null) {
+        theElapsedTime = splits.get(splits.size() - 1).actions.get(0).timestamp - splits.get(0).actions.get(0).timestamp - calcAllPauses();
       }
-      return elapsedTime;
+      return theElapsedTime;
     } else {
       throw new IllegalStateException(TIMER_ELAPSED_TIME_EXCEPTION);
     }
@@ -251,16 +255,16 @@ public final class NanoTimer {
    */
   public long[] splitTimes() {
     if (timerState == NanoTimerState.STOPPED) {
-      if (splitTimes == null) {
-        splitTimes = new long[splits.size() - 1];
+      if (theSplitTimes == null) {
+        theSplitTimes = new long[splits.size() - 1];
         final long startTime = splits.get(0).actions.get(0).timestamp;
         long totalPauses = 0;
         for (int i = 1; i < splits.size(); i++) {
           totalPauses += calcPauses(splits.get(i - 1));
-          splitTimes[i - 1] = splits.get(i).actions.get(0).timestamp - startTime - totalPauses;
+          theSplitTimes[i - 1] = splits.get(i).actions.get(0).timestamp - startTime - totalPauses;
         }
       }
-      return splitTimes;
+      return Arrays.copyOf(theSplitTimes, theSplitTimes.length);
     } else {
       throw new IllegalStateException(TIMER_SPLIT_TIMES_EXCEPTION);
     }
@@ -346,13 +350,13 @@ public final class NanoTimer {
    */
   public long[] splitPeriods() {
     if (timerState == NanoTimerState.STOPPED) {
-      if (splitPeriods == null) {
-        splitPeriods = new long[splits.size() - 1];
+      if (theSplitPeriods == null) {
+        theSplitPeriods = new long[splits.size() - 1];
         for (int i = 1; i < splits.size(); i++) {
-          splitPeriods[i - 1] = splits.get(i).actions.get(0).timestamp - splits.get(i - 1).actions.get(0).timestamp - calcPauses(splits.get(i - 1));
+          theSplitPeriods[i - 1] = splits.get(i).actions.get(0).timestamp - splits.get(i - 1).actions.get(0).timestamp - calcPauses(splits.get(i - 1));
         }
       }
-      return splitPeriods;
+      return Arrays.copyOf(theSplitPeriods, theSplitPeriods.length);
     } else {
       throw new IllegalStateException(TIMER_SPLIT_PERIODS_EXCEPTION);
     }
@@ -450,10 +454,10 @@ public final class NanoTimer {
         final StringBuilder s = new StringBuilder();
         final String actionsStr = split.actions.stream().map(sa -> sa.timerAction.action() + "(" + sa.timestamp + ")").collect(Collectors.joining(",", "[", "]"));
         final long pauses = calcPauses(split);
-        s.append("    {").append("\n");
+        s.append("    {").append('\n');
         s.append("      name: ").append(split.getName()).append(",\n");
         s.append("      actions: ").append(actionsStr).append(",\n");
-        s.append("      paused: ").append(pauses).append("\n");
+        s.append("      paused: ").append(pauses).append('\n');
         s.append("    }");
         return s.toString();
       }).collect(Collectors.joining(",\n", "[\n", "\n  ]")) + "\n}";
