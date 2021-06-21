@@ -330,7 +330,7 @@ public final class NanoTimer {
   public String splitTimeWithName(final int index, final TimeUnit timeUnit) {
     if (timerState == NanoTimerState.STOPPED) {
       if (index < 0 || index >= splits.size() - 1) {
-        throw new IllegalArgumentException(String.format("split time index %d out of range: 0 < index <= %d", index, splits.size() - 1));
+        throw new IllegalArgumentException(String.format(TIMER_SPLIT_OUT_OF_RANGE, index, splits.size() - 1));
       }
       return String.format(TIMER_SPLIT_WITH_NAME, splits.get(index).getName(), timeUnit.convert(splitTimes()[index], TimeUnit.NANOSECONDS), timeUnit.name().toLowerCase(Locale.ENGLISH));
     } else {
@@ -426,7 +426,7 @@ public final class NanoTimer {
   public String splitPeriodWithName(final int index, final TimeUnit timeUnit) {
     if (timerState == NanoTimerState.STOPPED) {
       if (index < 0 || index >= splits.size() - 1) {
-        throw new IllegalArgumentException(String.format("split period index %d out of range: 0 < index <= %d", index, splits.size() - 1));
+        throw new IllegalArgumentException(String.format(TIMER_SPLIT_OUT_OF_RANGE, index, splits.size() - 1));
       }
       return String.format(TIMER_SPLIT_WITH_NAME, splits.get(index).getName(), timeUnit.convert(splitPeriods()[index], TimeUnit.NANOSECONDS), timeUnit.name().toLowerCase(Locale.ENGLISH));
     } else {
